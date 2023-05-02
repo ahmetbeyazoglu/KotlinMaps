@@ -1,6 +1,7 @@
 package com.herpestes.kotlinmaps
 
 import android.app.Activity
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -24,13 +25,17 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.herpestes.kotlinmaps.databinding.ActivityMapsBinding
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
     private lateinit var mMap: GoogleMap
     private lateinit var binding: ActivityMapsBinding
     private lateinit var locationManager: LocationManager
     private lateinit var locationListener: LocationListener
     private lateinit var permissionLauncher: ActivityResultLauncher<String>
+    private lateinit var sharedPreferences: SharedPreferences
+    private var trackBoolean : Boolean? = null
+    private var selectedLatitude : Double? = null
+    private var selectedLongtitude : Double? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +49,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         registerLauncher()
+
+        sharedPreferences = this.getSharedPreferences("com.herpestes.kotlinmaps", MODE_PRIVATE)
+        trackBoolean = false
+        selectedLatitude = 0.0
+        selectedLongtitudee = 0.0
     }
 
     /**
@@ -57,13 +67,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.setOnMapLongClickListener(this)
+
         // casting
         locationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager
 
         locationListener = object :   LocationListener {
             override fun onLocationChanged(location: Location) {
-                println("location: " + location.toString())
-
+                trackBoolean = sharedPreferences.getBoolean("trackBoolean",false)
+                if(!trackBoolean!!) {
+                    val userLocation = LatLng(location.latitude, location.longitude)
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15f))
+                    sharedPreferences.edit().putBoolean("trackBoolean",true).apply()
+                }
             }
 
         }
@@ -81,6 +97,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }else{
             //permission granted
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0f,locationListener)
+
+            val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            if(lastLocation != null){
+                val lastUserLocation = LatLng(lastLocation.latitude,lastLocation.longitude)
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15f))
+            }
+            mMap.isMyLocationEnabled = true
         }
 
 
@@ -92,6 +115,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 //permission granted
                 if(ContextCompat.checkSelfPermission(this,android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0f,locationListener)
+                    val lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                    if(lastLocation != null){
+                        val lastUserLocation = LatLng(lastLocation.latitude,lastLocation.longitude)
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15f))
+                    }
+                    mMap.isMyLocationEnabled = true
                 }
             }else{
                 //permisson denied
@@ -100,6 +129,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
         }
+    }
+
+    override fun onMapLongClick(p0: LatLng) {
+
+        //mMap.clear()
+        mMap.addMarker(MarkerOptions().position(p0))
+        selectedLatitude = p0.latitude
+        selectedLongtitude = p0.longitude
+
     }
 
 }
