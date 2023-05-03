@@ -9,6 +9,7 @@ import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.telephony.TelephonyCallback.CellLocationListener
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
@@ -53,7 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         sharedPreferences = this.getSharedPreferences("com.herpestes.kotlinmaps", MODE_PRIVATE)
         trackBoolean = false
         selectedLatitude = 0.0
-        selectedLongtitudee = 0.0
+        selectedLongtitude = 0.0
     }
 
     /**
@@ -137,6 +138,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         mMap.addMarker(MarkerOptions().position(p0))
         selectedLatitude = p0.latitude
         selectedLongtitude = p0.longitude
+
+    }
+    fun save(view :View){
+
+    }
+    fun delete(view:View){
 
     }
 
