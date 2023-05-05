@@ -1,5 +1,6 @@
 package com.herpestes.kotlinmaps.view
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
@@ -13,6 +14,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.room.Room
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -23,6 +25,12 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import com.herpestes.kotlinmaps.R
 import com.herpestes.kotlinmaps.databinding.ActivityMapsBinding
+import com.herpestes.kotlinmaps.model.Place
+import com.herpestes.kotlinmaps.roomdb.PlaceDao
+import com.herpestes.kotlinmaps.roomdb.PlaceDatabase
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
@@ -35,6 +43,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     private var trackBoolean : Boolean? = null
     private var selectedLatitude : Double? = null
     private var selectedLongtitude : Double? = null
+    private lateinit var db : PlaceDatabase
+    private lateinit var placeDao: PlaceDao
+    val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +64,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
         trackBoolean = false
         selectedLatitude = 0.0
         selectedLongtitude = 0.0
+
+        db = Room.databaseBuilder(applicationContext,PlaceDatabase::class.java,"Places")
+            //.allowMainThreadQueries()
+            .build()
+
+        placeDao = db.placeDao()
+
     }
 
     /**
@@ -140,9 +158,30 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLon
     }
     fun save(view :View){
 
+        if(selectedLatitude != null && selectedLongtitude != null) {
+
+            val place = Place(binding.placeNameText.text.toString(), selectedLatitude!!, selectedLongtitude!!)
+            compositeDisposable.add(
+                placeDao.insert(place)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::handleResponse)
+            )
+        //placeDao.insert(place)
+        }
+    }
+    private fun handleResponse(){
+        val intent = Intent(this,MainActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(intent)
     }
     fun delete(view:View){
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        compositeDisposable.clear()
     }
 
 }
