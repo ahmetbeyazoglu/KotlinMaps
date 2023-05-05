@@ -1,6 +1,5 @@
-package com.herpestes.kotlinmaps
+package com.herpestes.kotlinmaps.view
 
-import android.app.Activity
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
@@ -8,11 +7,9 @@ import android.location.LocationListener
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.telephony.TelephonyCallback.CellLocationListener
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -24,8 +21,8 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
+import com.herpestes.kotlinmaps.R
 import com.herpestes.kotlinmaps.databinding.ActivityMapsBinding
-import com.herpestes.kotlinmaps.model.Place as Place1
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
